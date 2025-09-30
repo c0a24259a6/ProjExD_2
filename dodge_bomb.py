@@ -28,12 +28,9 @@ def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
 
 def gameover(screen: pg.Surface) -> None:
     """
-    1. 黒い矩形を描画するための空のSurfaceを作り,黒い矩形を描画する
-    2. 1のSurfaceの透明度を設定する
-    3. 白文字でGame Overと書かれたフォントSurfaceを作り,1のSurfaceにblitする
-    4. こうかとん画像をロードし,こうかとんSurfaceを作り,1のSurfaceにblitする
-    5. 1のSurfaceをscreen Surfaceにblitする
-    6. pg.display.update()したら,time.sleep(5)する
+    引数：screenのSurface
+    戻り値：None
+    こうかとんに爆弾が着弾した際に,画面をブラックアウトし,泣いているこうかとん画像と「Game Over」の文字列を5秒間表示させる関数
     """
     bo_img = pg.Surface((1100, 650))
     pg.draw.rect(bo_img, (0, 0, 0), pg.Rect(0, 0, 1100, 650))
@@ -47,6 +44,21 @@ def gameover(screen: pg.Surface) -> None:
     screen.blit(bo_img, [0, 0])
     pg.display.update()
     time.sleep(5)
+
+def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
+    """
+    引数:なし
+    戻り値：タプル（爆弾Surfaceのリスト,加速度のリスト）
+    時間とともに爆弾が拡大，加速する
+    """
+    bb_imgs = []
+    for r in range(1, 11):
+        bb_img = pg.Surface((20*r, 20*r))
+        pg.draw.circle(bb_img, (255, 0, 0), (10*r, 10*r), 10*r)
+        bb_img.set_colorkey((0, 0, 0))
+        bb_imgs.append(bb_img)
+    bb_accs = [a for a in range(1, 11)]
+    return bb_imgs, bb_accs
 
 
 def main():
@@ -67,6 +79,7 @@ def main():
 
     clock = pg.time.Clock()
     tmr = 0
+    bb_imgs, bb_accs = init_bb_imgs()
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
@@ -76,6 +89,11 @@ def main():
         if kk_rct.colliderect(bb_rct):  # こうかとんと爆弾の衝突
             gameover(screen)  # ゲームオーバー
             return
+        
+        avx = vx*bb_accs[min(tmr//500, 9)]
+        avy = vy*bb_accs[min(tmr//500, 9)]
+        bb_img = bb_imgs[min(tmr//500, 9)]
+
         key_lst = pg.key.get_pressed()
 
         sum_mv = [0, 0]
@@ -95,7 +113,8 @@ def main():
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
         screen.blit(kk_img, kk_rct)
-        bb_rct.move_ip(vx, vy)
+
+        bb_rct.move_ip(avx, avy)
         yoko, tate = check_bound(bb_rct)
         if not yoko:  # 横にはみ出ていたら
             vx *= -1

@@ -2,6 +2,7 @@ import os
 import sys
 import pygame as pg
 import random
+import time
 
 WIDTH, HEIGHT = 1100, 650
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -11,6 +12,7 @@ DELTA = {
             pg.K_LEFT: (-5, 0),
             pg.K_RIGHT: (5, 0),
         }
+
 def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     """
     引数：こうかとんRect or ばくだんRect
@@ -23,6 +25,28 @@ def check_bound(rct: pg.Rect) -> tuple[bool, bool]:
     if rct.top < 0 or HEIGHT < rct.bottom:  # 縦方向にはみ出ていたら
         tate = False
     return yoko, tate
+
+def gameover(screen: pg.Surface) -> None:
+    """
+    1. 黒い矩形を描画するための空のSurfaceを作り,黒い矩形を描画する
+    2. 1のSurfaceの透明度を設定する
+    3. 白文字でGame Overと書かれたフォントSurfaceを作り,1のSurfaceにblitする
+    4. こうかとん画像をロードし,こうかとんSurfaceを作り,1のSurfaceにblitする
+    5. 1のSurfaceをscreen Surfaceにblitする
+    6. pg.display.update()したら,time.sleep(5)する
+    """
+    bo_img = pg.Surface((1100, 650))
+    pg.draw.rect(bo_img, (0, 0, 0), pg.Rect(0, 0, 1100, 650))
+    bo_img.set_alpha(230)
+    gm_font = pg.font.Font(None, 80)
+    gm_txt = gm_font.render("Game Over", True, (255, 255, 255))
+    bo_img.blit(gm_txt, [410, 300])
+    kc_img = pg.image.load("fig/8.png")
+    bo_img.blit(kc_img, [340, 295])
+    bo_img.blit(kc_img, [740, 295])
+    screen.blit(bo_img, [0, 0])
+    pg.display.update()
+    time.sleep(5)
 
 
 def main():
@@ -50,9 +74,10 @@ def main():
         screen.blit(bg_img, [0, 0]) 
 
         if kk_rct.colliderect(bb_rct):  # こうかとんと爆弾の衝突
-            return  # ゲームオーバー
+            gameover(screen)  # ゲームオーバー
+            return
         key_lst = pg.key.get_pressed()
-        
+
         sum_mv = [0, 0]
         for key, mv in DELTA.items():
             if key_lst[key]:

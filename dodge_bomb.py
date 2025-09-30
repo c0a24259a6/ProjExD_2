@@ -49,7 +49,7 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     """
     引数:なし
     戻り値：タプル（爆弾Surfaceのリスト,加速度のリスト）
-    時間とともに爆弾が拡大，加速する
+    時間とともに爆弾が拡大，加速する関数
     """
     bb_imgs = []
     for r in range(1, 11):
@@ -60,6 +60,25 @@ def init_bb_imgs() -> tuple[list[pg.Surface], list[int]]:
     bb_accs = [a for a in range(1, 11)]
     return bb_imgs, bb_accs
 
+def get_kk_imgs() -> dict[tuple[int, int], pg.Surface]:
+    """
+    引数：なし
+    戻り値：移動量タプルと対応する画像Surfaceの辞書
+    飛ぶ方向に従ってこうかとん画像を切り替えるための関数
+    """
+    kk_img = pg.image.load("fig/3.png")
+    KK_dict = {
+        (0, 0): pg.transform.rotozoom(kk_img, 0, 1.0),
+        (-5, 0): pg.transform.rotozoom(kk_img, 0, 1.0),
+        (-5, -5): pg.transform.rotozoom(kk_img, -45, 1.0),
+        (-5, +5): pg.transform.rotozoom(kk_img, 45, 1.0),
+        (0, -5): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), 90, 1.0),
+        (+5, -5): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), 45, 1.0),
+        (+5, 0): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), 0, 1.0),
+        (+5, +5): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), -45, 1.0),
+        (0, +5): pg.transform.rotozoom(pg.transform.flip(kk_img, True, False), -90, 1.0),
+    }
+    return KK_dict
 
 def main():
     pg.display.set_caption("逃げろ！こうかとん")
@@ -80,6 +99,8 @@ def main():
     clock = pg.time.Clock()
     tmr = 0
     bb_imgs, bb_accs = init_bb_imgs()
+
+    kk_imgs = get_kk_imgs()
     while True:
         for event in pg.event.get():
             if event.type == pg.QUIT: 
@@ -112,6 +133,8 @@ def main():
         kk_rct.move_ip(sum_mv)
         if check_bound(kk_rct) != (True, True):
             kk_rct.move_ip(-sum_mv[0], -sum_mv[1])
+        
+        kk_img = kk_imgs[tuple(sum_mv)]
         screen.blit(kk_img, kk_rct)
 
         bb_rct.move_ip(avx, avy)
